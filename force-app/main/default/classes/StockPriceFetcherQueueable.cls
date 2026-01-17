@@ -33,23 +33,26 @@ public with sharing class StockPriceFetcherQueueable implements Queueable, Datab
                                 StockPriceService.createNewStockPrice(price, tickerToStockMap.get(stockTicker).Id)
                             );
                         } catch (Exception e) {
-                            System.debug('Error parsing value');
+                            errorLogs.add(ErrorLogService.createErrorLogWithMessage('Error parsing data'));
                         }
                     }
                 }
             } catch (CalloutException ce) {
-                errorLogs.add(ErrorLogService.createErrorLogWithExcStackTrace(ce));
+                errorLogs.add(ErrorLogService.createErrorLogWithMessage(ce.getStackTraceString()));
             }
         }
         SavePoint sp = Database.setSavepoint();
         try {
             if (!stockPrices.isEmpty()) {
                 StockPriceService.updateIsLatestFieldForOldStockPrices(stockPricesToUpdate);
+                if (!stockPricesToUpdate.isEmpty()) {
+                    update stockPricesToUpdate;
+                }
                 insert stockPrices;
             }
         } catch (Exception e) {
             Database.rollback(sp);
-            errorLogs.add(ErrorLogService.createErrorLogWithExcStackTrace(e));
+            errorLogs.add(ErrorLogService.createErrorLogWithMessage(e.getStackTraceString()));
         } finally {
             if (!errorLogs.isEmpty()) {
                 insert errorLogs;
