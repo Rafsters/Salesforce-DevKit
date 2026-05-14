@@ -24,12 +24,12 @@ jobs:
 
       # Install Salesforce CLI
       - name: Install sfdx
-        run: npm install @salesforce/cli --global
+        run: npm install sfdx-cli --global
 
       - name: Installing sfdx git delta
         run: |
-          echo Y | sf plugins install sfdx-git-delta
-          sf plugins install
+          echo Y | sfdx plugins:install sfdx-git-delta
+          sfdx plugins
 
       - name: Create delta packages
         run: |
