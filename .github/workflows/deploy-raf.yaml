@@ -28,8 +28,8 @@ jobs:
 
       - name: Installing sfdx git delta
         run: |
-          echo Y | sfdx plugins:install sfdx-git-delta
-          sfdx plugins
+          echo Y | sf plugins install sfdx-git-delta
+          sf plugins install
 
       - name: Create delta packages
         run: |
