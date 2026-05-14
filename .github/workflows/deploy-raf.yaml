@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -24,11 +24,11 @@ jobs:
 
       # Install Salesforce CLI
       - name: Install sfdx
-        run: npm install --global @salesforce/cli@latest
+        run: npm install --global @salesforce/cli
 
       - name: Installing sfdx git delta
         run: |
-          echo Y | sfdx plugins:install sfdx-git-delta
+          echo Y | sf plugins install sfdx-git-delta
           sfdx plugins
 
       - name: Create delta packages
