@@ -34,8 +34,12 @@ jobs:
       - name: Create delta packages
         run: |
           mkdir changed-sources
-          sf sgd source delta --to "HEAD" --from "HEAD~1" --output changed-sources/ --generate-delta --source force-app/
-          echo "[INFO] Diff generated"
+          sf sgd source delta \
+            --to "${{ github.sha }}" \
+            --from "${{ github.event.before }}" \
+            --output changed-sources/ \
+            --generate-delta \
+            --source force-app/
 
       - name: Deploy to environment with running all local tests
         run: |
