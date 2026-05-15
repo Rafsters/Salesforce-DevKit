@@ -17,7 +17,7 @@ public with sharing class StockPriceService {
             FROM Stock_Price__c
             WHERE IsLatestPrice__c = TRUE
         ];
-        System.debug('Test54646444');
+        System.debug('Test546464444');
         for (Stock_Price__c stockPrice : previousStockPrices) {
             stockPrice.IsLatestPrice__c = false;
             stockPricesToUpdate.add(stockPrice);
