@@ -31,27 +31,18 @@ jobs:
           echo Y | sf plugins install sfdx-git-delta
           sfdx plugins
 
-      - name: Create delta packages
+      - name: 'Create delta packages'
+        run: | 
+            mkdir changed-sources
+            sf sgd source delta --to "HEAD" --from "HEAD~1" --output-dir changed-sources/ --generate-delta
+      
+      - name: List changed files
+        run: find changed-sources -type f
+
+      - name: 'Deploy to environment'
         run: |
-          mkdir changed-sources
-          sf sgd source delta \
-            --to "${{ github.sha }}" \
-            --from "${{ github.event.before }}" \
-            --output changed-sources/ \
-            --generate-delta \
-            --source force-app/
-
-      - name: Deploy to environment with running all local tests
-        run: |
-          echo "${{ secrets.JWT_SERVER_KEY }}" > server.key
-
-          sf org login jwt \
-            --username ${{ secrets.DEPLOYMENT_USER_NAME }} \
-            --jwt-key-file server.key \
-            --client-id ${{ secrets.CONSUMER_KEY }} \
-            --instance-url ${{ vars.INSTANCE_URL }} \
-            --set-default
-
-          sf project deploy start \
-            --source-dir changed-sources/force-app \
-            --test-level RunLocalTests
+            echo "${{ secrets.JWT_SERVER_KEY }}" > server.key
+            sf org login jwt --username ${{ secrets.DEPLOYMENT_USER_NAME }} --jwt-key-file server.key --client-id ${{ secrets.CONSUMER_KEY }} --instance-url ${{ vars.INSTANCE_URL }} --set-default
+            
+            sf project deploy start \
+            --manifest changed-sources/package/package.xml \
