@@ -31,41 +31,28 @@ jobs:
           echo Y | sf plugins install sfdx-git-delta
           sfdx plugins
 
-      - name: Create delta packages
-        run: |
-          mkdir changed-sources
-          sf sgd source delta --to HEAD --from HEAD~1 --output changed-sources/ --generate-delta --source force-app/
-
-      - name: Sync Delta to Main Folder
-        run: |
-          # Sprawdzamy czy SGD faktycznie coś wygenerowało
-          if [ -d "changed-sources/force-app" ]; then
-            echo "Changes detected. Syncing delta to force-app..."
+      - name: 'Create delta packages'
+        run: | 
+            mkdir changed-sources
+            # Generujemy deltę
+            sf sgd source delta --to "HEAD" --from "HEAD~1" --output changed-sources/ --generate-delta --source force-app/
             
-            # 1. Usuwamy stare pliki, by nie deployować całego repo (zostawiamy pustą strukturę)
-            find force-app -mindepth 1 -maxdepth 1 -not -name ".git*" -exec rm -rf {} +
+            # KLUCZOWY MOMENT: Kopiujemy plik projektu do folderu z deltą
+            # Bez tego sf project deploy start wypluje "NothingToDeploy"
+            cp sfdx-project.json changed-sources/
             
-            # 2. Kopiujemy tylko zmienione pliki z delty do force-app
-            cp -r changed-sources/force-app/* force-app/
-            
-            echo "Files to be deployed:"
-            find force-app -type f
-          else
-            echo "No changes in force-app. Skipping sync."
-          fi
-
-      - name: Deploy to environment
+      - name: 'Deploy to environment'
         run: |
-          echo "${{ secrets.JWT_SERVER_KEY }}" > server.key
-          
-          sf org login jwt \
-            --username ${{ secrets.DEPLOYMENT_USER_NAME }} \
-            --jwt-key-file server.key \
-            --client-id ${{ secrets.CONSUMER_KEY }} \
-            --instance-url ${{ vars.INSTANCE_URL }} \
-            --set-default
-
-          # Teraz deployujemy z folderu 'force-app', który CLI zna i akceptuje
-          sf project deploy start \
-            --source-dir force-app \
-            --test-level RunLocalTests
+            echo "${{ secrets.JWT_SERVER_KEY }}" > server.key
+            
+            sf org login jwt \
+              --username ${{ secrets.DEPLOYMENT_USER_NAME }} \
+              --jwt-key-file server.key \
+              --client-id ${{ secrets.CONSUMER_KEY }} \
+              --instance-url ${{ vars.INSTANCE_URL }} \
+              --set-default
+            
+            # Odpalamy deploy wskazując na folder, który teraz udaje poprawny projekt
+            sf project deploy start \
+              --source-dir changed-sources/force-app \
+              --test-level RunLocalTests
