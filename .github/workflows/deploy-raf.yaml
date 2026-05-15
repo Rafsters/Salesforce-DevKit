@@ -34,20 +34,11 @@ jobs:
       - name: 'Create delta packages'
         run: | 
             mkdir changed-sources
-            sf sgd source delta --to "HEAD" --from "HEAD~1" -o changed-sources/ -s force-app/ --generate-delta
-            
-            # KOPIUJEMY sfdx-project.json DO ŚRODKA DELTY
-            # To sprawi, że folder 'changed-sources' stanie się "legalnym" projektem SFDX
-            cp sfdx-project.json changed-sources/
-            
-            echo "[INFO] Folder structure for deploy:"
-            ls -R changed-sources
+            sf sgd source delta --to "HEAD" --from "HEAD~1" --output-dir changed-sources/ --generate-delta
 
       - name: 'Deploy to environment'
         run: |
             echo "${{ secrets.JWT_SERVER_KEY }}" > server.key
             sf org login jwt --username ${{ secrets.DEPLOYMENT_USER_NAME }} --jwt-key-file server.key --client-id ${{ secrets.CONSUMER_KEY }} --instance-url ${{ vars.INSTANCE_URL }} --set-default
             
-            # WCHODZIMY DO FORDERA DELTY I STAMTĄD ODPALAMY DEPLOY
-            # Dzięki temu CLI widzi sfdx-project.json w tym samym folderze i nie marudzi
-            sfdx force:source:deploy -p "changed-sources/force-app" --testlevel RunLocalTests
+            sf project deploy start -x package/package.xml --post-destructive-changes destructiveChanges/destructiveChanges.xml
