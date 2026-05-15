@@ -40,7 +40,12 @@ jobs:
             --output changed-sources/ \
             --generate-delta \
             --source force-app/
-
+            
+      - name: Debug - List generated files
+        run: |
+          echo "Listing all files in changed-sources:"
+          find changed-sources
+          
       - name: Deploy to environment with running all local tests
         run: |
           echo "${{ secrets.JWT_SERVER_KEY }}" > server.key
