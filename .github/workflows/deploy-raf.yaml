@@ -53,4 +53,5 @@ jobs:
             cd changed-sources
             sf project deploy start \
               --source-dir force-app \
+              --target-org ${{ secrets.DEPLOYMENT_USER_NAME }} \
               --test-level RunLocalTests
