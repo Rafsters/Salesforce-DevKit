@@ -35,6 +35,9 @@ jobs:
         run: | 
             mkdir changed-sources
             sf sgd source delta --to "HEAD" --from "HEAD~1" --output-dir changed-sources/ --generate-delta
+      
+      - name: List changed files
+        run: find changed-sources -type f
 
       - name: 'Deploy to environment'
         run: |
