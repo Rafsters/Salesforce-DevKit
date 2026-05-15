@@ -58,5 +58,5 @@ jobs:
             --set-default
 
           sf project deploy start \
-            --source-dir changed-sources/force-app \
+            --manifest changed-sources/package/package.xml \
             --test-level RunLocalTests
