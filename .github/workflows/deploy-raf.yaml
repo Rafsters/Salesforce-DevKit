@@ -50,8 +50,4 @@ jobs:
             
             # WCHODZIMY DO FORDERA DELTY I STAMTĄD ODPALAMY DEPLOY
             # Dzięki temu CLI widzi sfdx-project.json w tym samym folderze i nie marudzi
-            cd changed-sources
-            sf project deploy start \
-              --source-dir force-app \
-              --target-org ${{ secrets.DEPLOYMENT_USER_NAME }} \
-              --test-level RunLocalTests
+            sfdx force:source:deploy -p "changed-sources/force-app" --testlevel RunLocalTests
