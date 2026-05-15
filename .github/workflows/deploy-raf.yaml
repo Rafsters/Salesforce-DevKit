@@ -35,8 +35,8 @@ jobs:
         run: |
           mkdir changed-sources
           sf sgd source delta \
-            --to "${{ github.sha }}" \
-            --from "${{ github.event.before }}" \
+            --to HEAD \
+            --from HEAD~1 \
             --output changed-sources/ \
             --generate-delta \
             --source force-app/
