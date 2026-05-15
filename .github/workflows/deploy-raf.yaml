@@ -34,19 +34,23 @@ jobs:
       - name: 'Create delta packages'
         run: | 
             mkdir changed-sources
-            # Używamy nowych flag -o oraz -s zgodnie z logiem
             sf sgd source delta --to "HEAD" --from "HEAD~1" -o changed-sources/ -s force-app/ --generate-delta
-            echo "[INFO] Diff generated"
-            # Sprawdźmy dla pewności czy manifest istnieje
-            ls -R changed-sources/package
-                
+            
+            # KOPIUJEMY sfdx-project.json DO ŚRODKA DELTY
+            # To sprawi, że folder 'changed-sources' stanie się "legalnym" projektem SFDX
+            cp sfdx-project.json changed-sources/
+            
+            echo "[INFO] Folder structure for deploy:"
+            ls -R changed-sources
+
       - name: 'Deploy to environment'
         run: |
             echo "${{ secrets.JWT_SERVER_KEY }}" > server.key
             sf org login jwt --username ${{ secrets.DEPLOYMENT_USER_NAME }} --jwt-key-file server.key --client-id ${{ secrets.CONSUMER_KEY }} --instance-url ${{ vars.INSTANCE_URL }} --set-default
             
-            # Zmieniamy --source-dir na --manifest
-            # To sprawi, że CLI weźmie listę plików z delty, ale dopasuje je do plików w Twoim repo
+            # WCHODZIMY DO FORDERA DELTY I STAMTĄD ODPALAMY DEPLOY
+            # Dzięki temu CLI widzi sfdx-project.json w tym samym folderze i nie marudzi
+            cd changed-sources
             sf project deploy start \
-              --manifest changed-sources/package/package.xml \
+              --source-dir force-app \
               --test-level RunLocalTests
