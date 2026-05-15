@@ -34,25 +34,19 @@ jobs:
       - name: 'Create delta packages'
         run: | 
             mkdir changed-sources
-            # Generujemy deltę
-            sf sgd source delta --to "HEAD" --from "HEAD~1" --output changed-sources/ --generate-delta --source force-app/
-            
-            # KLUCZOWY MOMENT: Kopiujemy plik projektu do folderu z deltą
-            # Bez tego sf project deploy start wypluje "NothingToDeploy"
-            cp sfdx-project.json changed-sources/
-            
+            # Używamy nowych flag -o oraz -s zgodnie z logiem
+            sf sgd source delta --to "HEAD" --from "HEAD~1" -o changed-sources/ -s force-app/ --generate-delta
+            echo "[INFO] Diff generated"
+            # Sprawdźmy dla pewności czy manifest istnieje
+            ls -R changed-sources/package
+                
       - name: 'Deploy to environment'
         run: |
             echo "${{ secrets.JWT_SERVER_KEY }}" > server.key
+            sf org login jwt --username ${{ secrets.DEPLOYMENT_USER_NAME }} --jwt-key-file server.key --client-id ${{ secrets.CONSUMER_KEY }} --instance-url ${{ vars.INSTANCE_URL }} --set-default
             
-            sf org login jwt \
-              --username ${{ secrets.DEPLOYMENT_USER_NAME }} \
-              --jwt-key-file server.key \
-              --client-id ${{ secrets.CONSUMER_KEY }} \
-              --instance-url ${{ vars.INSTANCE_URL }} \
-              --set-default
-            
-            # Odpalamy deploy wskazując na folder, który teraz udaje poprawny projekt
+            # Zmieniamy --source-dir na --manifest
+            # To sprawi, że CLI weźmie listę plików z delty, ale dopasuje je do plików w Twoim repo
             sf project deploy start \
-              --source-dir changed-sources/force-app \
+              --manifest changed-sources/package/package.xml \
               --test-level RunLocalTests
